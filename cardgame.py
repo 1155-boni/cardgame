@@ -1,5 +1,6 @@
 import tkinter as tk                # Import the tkinter library for GUI
 import random                      # Import random for shuffling the deck
+import os
 
 SUITS = ['♠', '♥', '♦', '♣']       # List of card suits
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']  # List of card ranks
@@ -34,7 +35,22 @@ class CardGameGUI:
         self.hand_frame.pack()            # Add frame to window
         self.draw_button = tk.Button(root, text="Draw Card", command=self.draw_card)  # Add draw button
         self.draw_button.pack()
+        self.card_images = {}  # Dictionary to store PhotoImage objects
+        self.load_card_images()  # Load all card images
         self.update_hand()                # Display player's hand
+
+        self.restart_button = tk.Button(root, text="Restart Game", command=self.restart_game)
+        self.restart_button.pack()
+
+    def load_card_images(self):
+        for suit in SUITS:
+            for rank in RANKS:
+                card_name = f"{rank}{suit}"
+                img_path = os.path.join("cards", f"{card_name}.png")
+                if os.path.exists(img_path):
+                    self.card_images[card_name] = tk.PhotoImage(file=img_path)
+                else:
+                    self.card_images[card_name] = None  # Or a default image
 
     def update_hand(self):
         for widget in self.hand_frame.winfo_children():  # Remove old buttons
@@ -42,18 +58,16 @@ class CardGameGUI:
         hand = self.player_hands[self.turn]              # Get current player's hand
         for card in hand:                               # For each card in hand
             btn = tk.Button(
-                self.hand_frame,                        # Place button in hand_frame
-                text=card,                              # Button text is card
-                font=("Arial", 24, "bold"),             # Large bold font
-                width=4,                                # Button width
-                height=2,                               # Button height
+                self.hand_frame,
+                text=card,                              # Only show card text
+                font=("Arial", 18, "bold"),             # Slightly smaller font
+                width=8,                                # Wider button for text
+                height=2,                               # Shorter button for text
                 command=lambda c=card: self.play_card(c) # When clicked, play the card
             )
             btn.pack(side=tk.LEFT)                      # Pack button to the left
-        # Enable draw button only if no valid play
-        top_card = self.discard_pile[-1]
-        can_play = any(valid_play(card, top_card, self.current_suit) for card in hand)
-        self.draw_button.config(state=tk.NORMAL if not can_play and self.deck else tk.DISABLED)
+        # Enable draw button always if deck is not empty
+        self.draw_button.config(state=tk.NORMAL if self.deck else tk.DISABLED)
 
     def play_card(self, card):
         top_card = self.discard_pile[-1]                # Get top card of discard pile
@@ -98,6 +112,21 @@ class CardGameGUI:
             self.update_hand()
         else:
             self.status.config(text="No cards left to draw!")
+
+    def restart_game(self):
+        self.deck = create_deck()
+        random.shuffle(self.deck)
+        self.player_hands = [self.deck[:7], self.deck[7:14]]
+        self.deck = self.deck[14:]
+        self.discard_pile = [self.deck.pop()]
+        self.current_suit = self.discard_pile[-1][-1]
+        self.turn = 0
+        self.status.config(text="Player 1's turn")
+        self.top_card_label.config(text=f"Top card: {self.discard_pile[-1]}")
+        self.hand_frame.destroy()
+        self.hand_frame = tk.Frame(self.root)
+        self.hand_frame.pack()
+        self.update_hand()
 
 if __name__ == "__main__":                              # If running as main program
     root = tk.Tk()                                      # Create main window
