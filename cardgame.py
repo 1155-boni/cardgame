@@ -42,6 +42,10 @@ class CardGameGUI:
         self.restart_button = tk.Button(root, text="Restart Game", command=self.restart_game)
         self.restart_button.pack()
 
+        self.scores = [0, 0]
+        self.score_label = tk.Label(root, text=f"Scores - Player 1: {self.scores[0]} | Player 2: {self.scores[1]}")
+        self.score_label.pack()
+
     def load_card_images(self):
         for suit in SUITS:
             for rank in RANKS:
@@ -95,23 +99,32 @@ class CardGameGUI:
         self.next_turn()                                 # Move to next turn
 
     def next_turn(self):
-        if not self.player_hands[self.turn]:             # If current player has no cards left
-            self.status.config(text=f"Player {self.turn + 1} wins!") # Announce winner
-            self.hand_frame.destroy()                    # Remove hand frame (end game)
-            return                                       # Stop further actions
-        self.turn = 1 - self.turn                        # Switch turn (0->1, 1->0)
-        self.status.config(text=f"Player {self.turn + 1}'s turn") # Update turn label
-        self.top_card_label.config(text=f"Top card: {self.discard_pile[-1]}") # Update top card label
-        self.update_hand()                               # Show new player's hand
+        if not self.player_hands[self.turn]:
+            self.scores[self.turn] += 1
+            self.status.config(text=f"Player {self.turn + 1} wins!")
+            self.score_label.config(text=f"Scores - Player 1: {self.scores[0]} | Player 2: {self.scores[1]}")
+            self.hand_frame.destroy()
+            return
+        self.turn = 1 - self.turn
+        self.status.config(text=f"Player {self.turn + 1}'s turn")
+        self.top_card_label.config(text=f"Top card: {self.discard_pile[-1]}")
+        self.update_hand()
 
     def draw_card(self):
+        if not self.deck:
+            if len(self.discard_pile) > 1:
+                top = self.discard_pile.pop()
+                random.shuffle(self.discard_pile)
+                self.deck = self.discard_pile
+                self.discard_pile = [top]
+            else:
+                self.status.config(text="No cards left to draw!")
+                return
         if self.deck:
             card = self.deck.pop()
             self.player_hands[self.turn].append(card)
             self.status.config(text=f"Player {self.turn + 1} drew a card.")
             self.update_hand()
-        else:
-            self.status.config(text="No cards left to draw!")
 
     def restart_game(self):
         self.deck = create_deck()
