@@ -39,7 +39,7 @@ class CardGameGUI:
 
         fg, bg = get_card_colors(self.discard_pile[-1])
         self.top_card_label = tk.Label(
-            root,
+            root, 
             text=f"Top card: {self.discard_pile[-1]}",
             font=("Arial", 32, "bold"),   # Larger font size
             pady=20                       # Extra vertical padding
