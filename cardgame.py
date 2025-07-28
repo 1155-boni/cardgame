@@ -22,8 +22,9 @@ def get_card_colors(card):
         return ("black", "white")  # Black suits
 
 class CardGameGUI:
-    def __init__(self, root):
-        self.root = root           # Store the root window
+    def __init__(self, root, player_names):
+        self.root = root
+        self.player_names = player_names  # <-- Add this line first!
         self.root.title("Crazy Eights")  # Set window title
         self.deck = create_deck()  # Create a new deck
         random.shuffle(self.deck)  # Shuffle the deck
@@ -33,9 +34,10 @@ class CardGameGUI:
         self.current_suit = self.discard_pile[-1][-1]  # Set current suit to suit of top discard
         self.turn = 0              # Start with player 1's turn (index 0)
 
-        self.status = tk.Label(root, text="Player 1's turn")  # Label to show whose turn
+        self.status = tk.Label(root, text=f"{self.player_names[0]}'s turn")  # Label to show whose turn
         self.status.pack()         # Add label to window
 
+        fg, bg = get_card_colors(self.discard_pile[-1])
         self.top_card_label = tk.Label(
             root,
             text=f"Top card: {self.discard_pile[-1]}",
@@ -46,14 +48,14 @@ class CardGameGUI:
 
         self.top_card_btn = tk.Button(
             root,
-            text=self.discard_pile[-1],           # Show the top card
-            font=("Arial", 24, "bold"),           # Large font for visibility
-            width=8,                              # Same width as hand cards
-            height=2,                             # Same height as hand cards
-            state=tk.DISABLED,                    # Make it non-clickable
-            disabledforeground="black",           # Text color when disabled
-            relief=tk.RIDGE,                      # Card-like border
-            bg="white"                            # Card background
+            text=self.discard_pile[-1],
+            font=("Arial", 18, "bold"),
+            width=6,
+            height=4,
+            state=tk.DISABLED,
+            disabledforeground=fg,   # Use suit color for disabled text
+            relief=tk.RIDGE,
+            bg=bg
         )
         self.top_card_btn.pack(pady=20)           # Add vertical padding
 
@@ -69,14 +71,17 @@ class CardGameGUI:
         self.restart_button.pack()
 
         self.scores = [0, 0]
-        self.score_label = tk.Label(root, text=f"Scores - Player 1: {self.scores[0]} | Player 2: {self.scores[1]}")
+        self.score_label = tk.Label(root, text=f"Scores - {self.player_names[0]}: {self.scores[0]} | {self.player_names[1]}: {self.scores[1]}")
         self.score_label.pack()
 
-        self.timer_label = tk.Label(root, text="Time left: 10")
+        self.timer_label = tk.Label(root, text="Time left: 20")
         self.timer_label.pack()
-        self.time_left = 10
+        self.time_left = 20
         self.timer_running = False
         self.start_timer()
+
+        self.player_names = player_names
+        self.update_status()
 
     def load_card_images(self):
         for suit in SUITS:
@@ -98,8 +103,8 @@ class CardGameGUI:
                 self.hand_frame,
                 text=card,
                 font=("Arial", 18, "bold"),
-                width=8,
-                height=2,
+                width=6,
+                height=4,
                 fg=fg,                   # Set text color
                 bg=bg,                   # Set background color
                 command=lambda c=card: self.play_card(c) # When clicked, play the card
@@ -136,8 +141,8 @@ class CardGameGUI:
     def next_turn(self):
         if not self.player_hands[self.turn]:
             self.scores[self.turn] += 1
-            self.status.config(text=f"Player {self.turn + 1} wins!")
-            self.score_label.config(text=f"Scores - Player 1: {self.scores[0]} | Player 2: {self.scores[1]}")
+            self.status.config(text=f"{self.player_names[self.turn]} wins!")
+            self.score_label.config(text=f"Scores - {self.player_names[0]}: {self.scores[0]} | {self.player_names[1]}: {self.scores[1]}")
             self.hand_frame.destroy()
             self.timer_running = False
             return
@@ -174,7 +179,12 @@ class CardGameGUI:
         self.current_suit = self.discard_pile[-1][-1]
         self.turn = 0
         self.status.config(text="Player 1's turn")
-        self.top_card_btn.config(text=self.discard_pile[-1])  # <-- update button, not label
+        fg, bg = get_card_colors(self.discard_pile[-1])
+        self.top_card_btn.config(
+    text=self.discard_pile[-1],
+    disabledforeground=fg,
+    bg=bg
+)
         self.hand_frame.destroy()
         self.hand_frame = tk.Frame(self.root)
         self.hand_frame.pack()
@@ -197,7 +207,52 @@ class CardGameGUI:
                 self.next_turn()
                 self.start_timer()
 
-if __name__ == "__main__":                              # If running as main program
-    root = tk.Tk()                                      # Create main window
-    app = CardGameGUI(root)                             # Create game GUI
-    root.mainloop()                                     # Start Tkinter
+    def get_player_names(self):
+        name_win = tk.Tk()
+        name_win.title("Enter Player Names")
+        tk.Label(name_win, text="Player 1 Name:").grid(row=0, column=0)
+        tk.Label(name_win, text="Player 2 Name:").grid(row=1, column=0)
+        p1_entry = tk.Entry(name_win)
+        p2_entry = tk.Entry(name_win)
+        p1_entry.grid(row=0, column=1)
+        p2_entry.grid(row=1, column=1)
+        names = []
+
+        def submit():
+            names.append(p1_entry.get() or "Player 1")
+            names.append(p2_entry.get() or "Player 2")
+            name_win.destroy()
+
+        tk.Button(name_win, text="Start Game", command=submit).grid(row=2, column=0, columnspan=2)
+        name_win.mainloop()
+        return names
+
+    def update_status(self):
+        self.status.config(text=f"{self.player_names[self.turn]}'s turn")
+        self.score_label.config(text=f"Scores - {self.player_names[0]}: {self.scores[0]} | {self.player_names[1]}: {self.scores[1]}")
+
+if __name__ == "__main__":
+    def get_player_names():
+        name_win = tk.Tk()
+        name_win.title("Enter Player Names")
+        tk.Label(name_win, text="Player 1 Name:").grid(row=0, column=0)
+        tk.Label(name_win, text="Player 2 Name:").grid(row=1, column=0)
+        p1_entry = tk.Entry(name_win)
+        p2_entry = tk.Entry(name_win)
+        p1_entry.grid(row=0, column=1)
+        p2_entry.grid(row=1, column=1)
+        names = []
+
+        def submit():
+            names.append(p1_entry.get() or "Player 1")
+            names.append(p2_entry.get() or "Player 2")
+            name_win.destroy()
+
+        tk.Button(name_win, text="Start Game", command=submit).grid(row=2, column=0, columnspan=2)
+        name_win.mainloop()
+        return names
+
+    player_names = get_player_names()
+    root = tk.Tk()
+    app = CardGameGUI(root, player_names)
+    root.mainloop()
