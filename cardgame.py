@@ -46,6 +46,12 @@ class CardGameGUI:
         self.score_label = tk.Label(root, text=f"Scores - Player 1: {self.scores[0]} | Player 2: {self.scores[1]}")
         self.score_label.pack()
 
+        self.timer_label = tk.Label(root, text="Time left: 10")
+        self.timer_label.pack()
+        self.time_left = 10
+        self.timer_running = False
+        self.start_timer()
+
     def load_card_images(self):
         for suit in SUITS:
             for rank in RANKS:
@@ -104,11 +110,13 @@ class CardGameGUI:
             self.status.config(text=f"Player {self.turn + 1} wins!")
             self.score_label.config(text=f"Scores - Player 1: {self.scores[0]} | Player 2: {self.scores[1]}")
             self.hand_frame.destroy()
+            self.timer_running = False
             return
         self.turn = 1 - self.turn
         self.status.config(text=f"Player {self.turn + 1}'s turn")
         self.top_card_label.config(text=f"Top card: {self.discard_pile[-1]}")
         self.update_hand()
+        self.start_timer()
 
     def draw_card(self):
         if not self.deck:
@@ -140,6 +148,23 @@ class CardGameGUI:
         self.hand_frame = tk.Frame(self.root)
         self.hand_frame.pack()
         self.update_hand()
+
+    def start_timer(self):
+        self.time_left = 10
+        self.timer_running = True
+        self.update_timer()
+
+    def update_timer(self):
+        if self.timer_running:
+            self.timer_label.config(text=f"Time left: {self.time_left}")
+            if self.time_left > 0:
+                self.time_left -= 1
+                self.root.after(1000, self.update_timer)
+            else:
+                self.status.config(text=f"Player {self.turn + 1} ran out of time! Turn passes.")
+                self.timer_running = False
+                self.next_turn()
+                self.start_timer()
 
 if __name__ == "__main__":                              # If running as main program
     root = tk.Tk()                                      # Create main window
