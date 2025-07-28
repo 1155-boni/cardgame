@@ -28,8 +28,26 @@ class CardGameGUI:
         self.status = tk.Label(root, text="Player 1's turn")  # Label to show whose turn
         self.status.pack()         # Add label to window
 
-        self.top_card_label = tk.Label(root, text=f"Top card: {self.discard_pile[-1]}")  # Show top card
+        self.top_card_label = tk.Label(
+            root,
+            text=f"Top card: {self.discard_pile[-1]}",
+            font=("Arial", 32, "bold"),   # Larger font size
+            pady=20                       # Extra vertical padding
+        )
         self.top_card_label.pack() # Add label to window
+
+        self.top_card_btn = tk.Button(
+            root,
+            text=self.discard_pile[-1],           # Show the top card
+            font=("Arial", 24, "bold"),           # Large font for visibility
+            width=8,                              # Same width as hand cards
+            height=2,                             # Same height as hand cards
+            state=tk.DISABLED,                    # Make it non-clickable
+            disabledforeground="black",           # Text color when disabled
+            relief=tk.RIDGE,                      # Card-like border
+            bg="white"                            # Card background
+        )
+        self.top_card_btn.pack(pady=20)           # Add vertical padding
 
         self.hand_frame = tk.Frame(root)  # Frame to hold player's hand (buttons)
         self.hand_frame.pack()            # Add frame to window
@@ -114,7 +132,7 @@ class CardGameGUI:
             return
         self.turn = 1 - self.turn
         self.status.config(text=f"Player {self.turn + 1}'s turn")
-        self.top_card_label.config(text=f"Top card: {self.discard_pile[-1]}")
+        self.top_card_btn.config(text=self.discard_pile[-1])  # <-- update button, not label
         self.update_hand()
         self.start_timer()
 
@@ -143,7 +161,7 @@ class CardGameGUI:
         self.current_suit = self.discard_pile[-1][-1]
         self.turn = 0
         self.status.config(text="Player 1's turn")
-        self.top_card_label.config(text=f"Top card: {self.discard_pile[-1]}")
+        self.top_card_btn.config(text=self.discard_pile[-1])  # <-- update button, not label
         self.hand_frame.destroy()
         self.hand_frame = tk.Frame(self.root)
         self.hand_frame.pack()
