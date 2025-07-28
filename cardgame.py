@@ -13,6 +13,14 @@ def valid_play(card, top_card, current_suit):
         return True
     return card[-1] == current_suit or card[:-1] == top_card[:-1]  # Valid if suit matches or rank matches
 
+def get_card_colors(card):
+    # Returns (foreground, background) tuple based on suit
+    suit = card[-1]
+    if suit == '♥' or suit == '♦':
+        return ("red", "white")    # Red suits
+    else:
+        return ("black", "white")  # Black suits
+
 class CardGameGUI:
     def __init__(self, root):
         self.root = root           # Store the root window
@@ -85,12 +93,15 @@ class CardGameGUI:
             widget.destroy()
         hand = self.player_hands[self.turn]              # Get current player's hand
         for card in hand:                               # For each card in hand
+            fg, bg = get_card_colors(card)
             btn = tk.Button(
                 self.hand_frame,
-                text=card,                              # Only show card text
-                font=("Arial", 18, "bold"),             # Slightly smaller font
-                width=8,                                # Wider button for text
-                height=2,                               # Shorter button for text
+                text=card,
+                font=("Arial", 18, "bold"),
+                width=8,
+                height=2,
+                fg=fg,                   # Set text color
+                bg=bg,                   # Set background color
                 command=lambda c=card: self.play_card(c) # When clicked, play the card
             )
             btn.pack(side=tk.LEFT)                      # Pack button to the left
@@ -132,9 +143,11 @@ class CardGameGUI:
             return
         self.turn = 1 - self.turn
         self.status.config(text=f"Player {self.turn + 1}'s turn")
-        self.top_card_btn.config(text=self.discard_pile[-1])  # <-- update button, not label
+        self.top_card_label.config(text=f"Top card: {self.discard_pile[-1]}")
+        self.top_card_btn.config(text=self.discard_pile[-1])
         self.update_hand()
-        self.start_timer()
+        self.timer_running = False         # Stop any previous timer
+        self.start_timer()                 # Start a new timer for the new turn
 
     def draw_card(self):
         if not self.deck:
@@ -168,7 +181,7 @@ class CardGameGUI:
         self.update_hand()
 
     def start_timer(self):
-        self.time_left = 10
+        self.time_left = 20
         self.timer_running = True
         self.update_timer()
 
@@ -177,7 +190,7 @@ class CardGameGUI:
             self.timer_label.config(text=f"Time left: {self.time_left}")
             if self.time_left > 0:
                 self.time_left -= 1
-                self.root.after(1000, self.update_timer)
+                self.root.after(2000, self.update_timer)
             else:
                 self.status.config(text=f"Player {self.turn + 1} ran out of time! Turn passes.")
                 self.timer_running = False
